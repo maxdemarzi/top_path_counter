@@ -2,7 +2,7 @@ package com.maxdemarzi;
 
 import org.neo4j.logging.Log;
 
-import java.util.TimerTask;
+import java.util.*;
 
 public class TopSoFar extends TimerTask {
 
@@ -14,9 +14,13 @@ public class TopSoFar extends TimerTask {
 
     @Override
     public void run() {
-        log.info("========================================================================================");
-        Procedures.topCounts.forEach(x-> {
-            log.info("Path: "+ x.getKey() + " Count: " + x.getValue());
-        });
+        try {
+            log.info("========================================================================================");
+            Procedures.topCounts.forEach(x -> {
+                log.info("Path: " + x.getKey() + " Count: " + x.getValue());
+            });
+        } catch (ConcurrentModificationException e) {
+            log.info("topCounts is busy, will try again in 5 seconds.");
+        }
     }
 }

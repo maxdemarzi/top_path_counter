@@ -66,11 +66,11 @@ public class Procedures {
 
         LongIterator longIterator = startingNodes.getLongIterator();
 
-        topCounts = new PriorityQueue<>(top.intValue(), (lhs, rhs) -> {
-            if (lhs.getValue() < rhs.getValue()) return +1;
-            if (lhs.equals(rhs)) return 0;
-            return -1;
-        });
+        HashMap<String, Long> keyCounts = new HashMap<>();
+        topCounts = new PriorityQueue<>(top.intValue(), Map.Entry.comparingByValue());
+        Map.Entry<String, Long> least;
+
+
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TopSoFar(log), 5000, 5000);
 
@@ -86,17 +86,21 @@ public class Procedures {
                 for (int start = 0; start < nodeIds.size(); start++) {
                     for (int end = start + 3; end <= nodeIds.size(); end++) {
                         String key = StringUtils.join(nodeIds.subList(start,end), "-");
-                        //System.out.println(key);
                         long counts = chronicleMap.merge(key, 1L, Long::sum);
-                        if (topCounts.size() < top.intValue()) {
-                            topCounts.add(new AbstractMap.SimpleEntry<>(key, counts));
-                        } else {
-                            Map.Entry<String, Long> last = topCounts.peek();
-                            if(last.getValue() < counts) {
-                                topCounts.poll();
-                                topCounts.add(new AbstractMap.SimpleEntry<>(key, counts));
-                            }
+
+                        keyCounts.put(key, counts);
+                        topCounts.clear();
+                        keyCounts.entrySet().forEach(x -> {
+                            topCounts.add(new AbstractMap.SimpleEntry<>(x.getKey(), x.getValue()));
+                        });
+
+                        if (topCounts.size() > top.intValue()) {
+                            least = topCounts.poll();
+                            keyCounts.remove(least.getKey());
                         }
+
+                        //keyCounts.clear();
+                        //topCounts.forEach(x -> { keyCounts.put(x.getKey(), x.getValue());});
                     }
                 }
             }
