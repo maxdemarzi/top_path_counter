@@ -28,6 +28,7 @@ public class Procedures {
     public Log log;
 
     static final RelationshipType LINKED_TO = RelationshipType.withName("LINKED_TO");
+    public static PriorityQueue<Map.Entry<String, Long>> topCounts;
 
     @Procedure(name = "com.maxdemarzi.top.paths", mode = Mode.READ)
     @Description("CALL com.maxdemarzi.top.paths(top, limit, path)")
@@ -65,11 +66,13 @@ public class Procedures {
 
         LongIterator longIterator = startingNodes.getLongIterator();
 
-        PriorityQueue<Map.Entry<String, Long>> topCounts = new PriorityQueue<>(top.intValue(), (lhs, rhs) -> {
+        topCounts = new PriorityQueue<>(top.intValue(), (lhs, rhs) -> {
             if (lhs.getValue() < rhs.getValue()) return +1;
             if (lhs.equals(rhs)) return 0;
             return -1;
         });
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TopSoFar(log), 5000, 5000);
 
         while (longIterator.hasNext()) {
             long nodeId = longIterator.next();
@@ -83,7 +86,7 @@ public class Procedures {
                 for (int start = 0; start < nodeIds.size(); start++) {
                     for (int end = start + 3; end <= nodeIds.size(); end++) {
                         String key = StringUtils.join(nodeIds.subList(start,end), "-");
-                        System.out.println(key);
+                        //System.out.println(key);
                         long counts = chronicleMap.merge(key, 1L, Long::sum);
                         if (topCounts.size() < top.intValue()) {
                             topCounts.add(new AbstractMap.SimpleEntry<>(key, counts));
@@ -99,6 +102,7 @@ public class Procedures {
             }
         }
         chronicleMap.clear();
+        timer.cancel();
         return topCounts.stream().map(x -> new KeyCountResult(x.getKey(), x.getValue()));
 
     }

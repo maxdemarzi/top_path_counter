@@ -22,6 +22,9 @@ Restart your Neo4j Server. Your new Stored Procedures are available:
     CALL com.maxdemarzi.top.paths(top, limit, path) // top x to return, limit is size of traversal
     CALL com.maxdemarzi.top.paths(10, 6, "/tmp/paths.chronicle")
     
+    To see the best paths every 5 seconds:
+    tail -f ./neo4j-enterprise-3.5.8/logs/neo4j.log 
+    
 Example:
 
     create (n:Node)
